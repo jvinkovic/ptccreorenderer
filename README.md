@@ -1,0 +1,1 @@
+Connects to open creo application with model and generates images of whole family of the model in folder next tu model file.
