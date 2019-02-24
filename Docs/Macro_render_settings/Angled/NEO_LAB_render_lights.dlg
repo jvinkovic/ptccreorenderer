@@ -1,0 +1,139 @@
+﻿V6.0
+unit_scale 0.039370078740 
+model_scale 2.698786108372 
+model_center -0.000000000000 1.920473325677 0.000000000000 
+studio_center 0.000000000000 0.000000000000 0.000000000000 
+camera_center 0.000000000000 0.000000000000 -2.032793199608 
+room_center 0.000000000000 0.000000000000 0.000000000000 
+# light_name "default ambient"
+light_type ambient_light
+light_name "default ambient"
+light_state 0
+light_color 0.600000 0.600000 0.600000
+position 1.000000000000 1.000000000000 1.000000000000 
+aim_at 0.000000000000 0.000000000000 0.000000000000 
+locked_to studio
+spot_angle 45.000000
+spot_focus 90.000000
+casts_shadows 0
+soft_shadows 0
+shadows_hardness 0.000000
+scatter 0
+scatter_type none
+intensity 1.000000
+threshold 50.000000
+show_icon 0
+num_sky_samples 50
+light_units 0
+light_temperature 2800
+noise_factor 0.000000
+wattage 60.000000
+wattage_type 0
+physical 0
+hdrilight_imagepath 
+hdrilight_samples 0
+hdrilight_softness 0.000000
+hdrilight_saturation 0.000000
+hdrilight_rotation 0.000000
+hdrilight_envtype 0
+hdrilight_zoom 0.000000
+hdrilight_height 0.000000
+# light_name "default distant"
+light_type directional_light
+light_name "default distant"
+light_state 1
+light_color 1.000000 1.000000 1.000000
+position 8.713837253066 8.850783605888 -2.173487038689 
+aim_at 0.020834624488 3.843638644636 2.720833042123 
+locked_to scene
+spot_angle 45.000000
+spot_focus 90.000000
+casts_shadows 0
+soft_shadows 0
+shadows_hardness 45.000000
+scatter 0
+scatter_type none
+intensity 1.000000
+threshold 50.000000
+show_icon 1
+num_sky_samples 50
+light_units 0
+light_temperature 0
+noise_factor 0.000000
+wattage 60.000000
+wattage_type 0
+physical 0
+hdrilight_imagepath 
+hdrilight_samples 0
+hdrilight_softness 0.000000
+hdrilight_saturation 0.000000
+hdrilight_rotation 0.000000
+hdrilight_envtype 0
+hdrilight_zoom 0.000000
+hdrilight_height 0.000000
+# light_name "Environment"
+light_type hdri_light
+light_name "Environment"
+light_state 1
+light_color 1.000000 1.000000 1.000000
+position 0.657135495925 0.850359048692 0.151672515697 
+aim_at 0.096831625796 0.382952125607 0.053596519370 
+locked_to studio
+spot_angle 45.000000
+spot_focus 90.000000
+casts_shadows 0
+soft_shadows 1
+shadows_hardness 50.000000
+scatter 0
+scatter_type none
+intensity 1.150000
+threshold 50.000000
+show_icon 0
+num_sky_samples 50
+light_units 0
+light_temperature 0
+noise_factor 0.000000
+wattage 60.000000
+wattage_type 0
+physical 0
+hdrilight_imagepath C:\Program Files\PTC\Creo 4.0\M050\Common Files\graphic-library\hdri\Default.hdr
+hdrilight_samples 50
+hdrilight_softness 0.000000
+hdrilight_saturation 0.000000
+hdrilight_rotation 15.000000
+hdrilight_envtype 0
+hdrilight_zoom -0.130000
+hdrilight_height 0.000000
+# light_name "distant1"
+light_type directional_light
+light_name "distant1"
+light_state 1
+light_color 1.000000 1.000000 1.000000
+position -2.203905730643 2.121826253316 7.063349189869 
+aim_at 0.000000002834 1.569718773180 1.117223784175 
+locked_to scene
+spot_angle 45.000000
+spot_focus 90.000000
+casts_shadows 0
+soft_shadows 0
+shadows_hardness 60.000000
+scatter 0
+scatter_type none
+intensity 0.100000
+threshold 50.000000
+show_icon 1
+num_sky_samples 50
+light_units 0
+light_temperature 2800
+noise_factor 0.000000
+wattage 60.000000
+wattage_type 0
+physical 0
+hdrilight_imagepath 
+hdrilight_samples 0
+hdrilight_softness 0.000000
+hdrilight_saturation 0.000000
+hdrilight_rotation 0.000000
+hdrilight_envtype 0
+hdrilight_zoom 0.000000
+hdrilight_height 0.000000

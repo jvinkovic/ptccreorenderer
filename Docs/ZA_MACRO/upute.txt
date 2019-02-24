@@ -1,0 +1,28 @@
+[ENG]
+
+I have prepared the part and the macro. The part name is "a21_ha_s_macro.prt.6". First you need to change to new configuration file "MAPKEY.pro". To start the macro press F4. You will see the problem of overwriting the renders.
+
+The macro should do the following:
+
+
+1) Open the first part instance
+2) Make a render with configured settings
+3) Save it with that instance name
+4) Open next instance and repeat 1)-3)
+
+So if the part has a family table with 200 instances we should have 200 different instance renders in output folder. It is important that renders have part names from the part family table.
+
+------------------------------------------------------
+
+[CRO]
+
+Naziv modela je "a21_ha_s_macro.prt.6". Prije pokretanja makroa potrebno je namjestiti novi konfiguracijski file unutar Crea na "MAPKEY.pro". Za pokrenuti macro pritisnuti F4. Zatim ce biti vidljiv problem sa snimanjem rendera nove instance preko rendera prethodne instance.
+
+Makro bi trebao raditi na sljedeci nacin:
+1) Otvoriti "Part Instance"
+2) Napraviti render sa konfiguracijom koja je namjestena u trenutnom makrou
+3) Snimiti render sa nazivom dijela 
+4) Otvoriti sljedeci "Part Instance" i ponoviti korake 1)-3)
+
+Ako u tablici instanci postoji 200 instanci kada makro odradi svoj posao trebalo bi biti i 200 PNG fileova sa renderima tih instanci. 
+
