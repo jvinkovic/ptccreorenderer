@@ -2,11 +2,11 @@
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace PtcCreoRenderer
+namespace Renderer
 {
-    public class NonUiProgram
+    public class FromModel
     {
-        private static string logName = "log";
+        private static string logName = "logM";
         private static int logEntriesCount = 5;
 
         public static pfcls.IpfcWindow Window;
@@ -15,22 +15,22 @@ namespace PtcCreoRenderer
         public static pfcls.CCpfcAsyncConnection Casync;
         public static pfcls.IpfcModel StartingDocument;
 
-        private string Exe = @"C:\PTC_stuff\Creo 4.0\M050\Parametric\bin\parametric.exe";
-        private string ModelPath;
+        private string _exe = @"C:\PTC_stuff\Creo 4.0\M050\Parametric\bin\parametric.exe"; // for test
+        private string _modelPath;
+        private string _imagesFolder;
 
-        public void Start(string modelPath, string exe = null)
+        public void Start(string imagesFolder, string exe, string modelPath)
         {
-            if (exe != null)
+            _imagesFolder = imagesFolder;
+
+            if (exe != "test")
             {
-                Exe = exe;
+                _exe = exe;
             }
-            ModelPath = modelPath;
+
+            _modelPath = modelPath;
 
             SetLogFile();
-
-            // close handler
-            _handler += new EventHandler(Handler);
-            SetConsoleCtrlHandler(_handler, true);
 
             if (ConnectToPtc())
             {
@@ -39,8 +39,11 @@ namespace PtcCreoRenderer
 
             File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " END \n");
 
-            Console.WriteLine("\nPress any key to exit!");
-            Console.ReadKey();
+            if (Console.IsOutputRedirected == false)
+            {
+                Console.WriteLine("\nPress any key to exit!");
+                Console.ReadKey();
+            }
         }
 
         private void SetLogFile()
@@ -55,18 +58,20 @@ namespace PtcCreoRenderer
             f.Close();
         }
 
-        private void testNonUi()
+        private void SetModel()
         {
             pfcls.IpfcModelDescriptor descModel;
 
             Session.ChangeDirectory(Environment.CurrentDirectory);
-            descModel = (new pfcls.CCpfcModelDescriptor()).CreateFromFileName(ModelPath);
+            descModel = (new pfcls.CCpfcModelDescriptor()).CreateFromFileName(_modelPath);
 
             StartingDocument = Session.RetrieveModel(descModel);
         }
 
         private bool ConnectToPtc()
         {
+            Console.WriteLine("\nConnecting to PTC...");
+
             try
             {
                 File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Connect to ptc start... \n");
@@ -77,12 +82,12 @@ namespace PtcCreoRenderer
                     AsyncConnection = Casync.GetActiveConnection();
 
                     if (AsyncConnection == null)
-                    {                        
-                        AsyncConnection = Casync.Start(Exe + " -g:no_graphics -i:rpc_input", ".");
+                    {
+                        AsyncConnection = Casync.Start(_exe + " -g:no_graphics -i:rpc_input", ".");
                         File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got connection \n");
                     }
                     Session = (pfcls.IpfcBaseSession)AsyncConnection.Session;
-                    testNonUi();
+                    SetModel();
                     File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got session \n");
                 }
             }
@@ -111,13 +116,16 @@ namespace PtcCreoRenderer
                 {
                     // do the rendering
                     pfcls.IpfcSolid solid = (pfcls.IpfcSolid)StartingDocument;
-                    pfcls.IpfcFamilyMember familyMember = (pfcls.IpfcFamilyMember)solid;                    
+                    pfcls.IpfcFamilyMember familyMember = (pfcls.IpfcFamilyMember)solid;
 
                     string cleanDocName = string.Concat(StartingDocument.FullName?.Split(Path.GetInvalidFileNameChars()));
-                    var dir = Directory.GetCurrentDirectory();
+                    var dir = _imagesFolder;
                     try
                     {
-                        dir = Path.GetDirectoryName(ModelPath);
+                        if (dir == null)
+                        {
+                            dir = Path.GetDirectoryName(_modelPath);
+                        }
                     }
                     catch { }
 
@@ -137,6 +145,8 @@ namespace PtcCreoRenderer
                     instructions.DotsPerInch = pfcls.EpfcDotsPerInch.EpfcRASTERDPI_300;
                     instructions.ImageDepth = pfcls.EpfcRasterDepth.EpfcRASTERDEPTH_24;
 
+                    Console.WriteLine("Getting instances...");
+                    File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Getting instances... \n");
                     pfcls.CpfcFamilyTableRows familyTableRows = familyMember.ListRows();
                     var total = familyTableRows.Count;
                     float count = 0;
@@ -169,8 +179,6 @@ namespace PtcCreoRenderer
                 {
                     StartingDocument.Display();
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -183,7 +191,7 @@ namespace PtcCreoRenderer
             }
         }
 
-        private  void Cleanup()
+        private void Cleanup()
         {
             if (AsyncConnection != null)
             {
@@ -198,39 +206,5 @@ namespace PtcCreoRenderer
                 }
             }
         }
-
-        #region Trap application termination
-
-        [DllImport("Kernel32")]
-        private static extern bool SetConsoleCtrlHandler(EventHandler handler, bool add);
-
-        private delegate bool EventHandler(CtrlType sig);
-
-        private static EventHandler _handler;
-
-        private enum CtrlType
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT = 1,
-            CTRL_CLOSE_EVENT = 2,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT = 6
-        }
-
-        private  bool Handler(CtrlType sig)
-        {
-            Console.WriteLine("Exiting system due to external CTRL-C, or process kill, or shutdown");
-
-            // do the cleanup - up to 5 sec MAX
-            // or OS will kill everything instead
-            Cleanup();
-
-            //shutdown right away so there are no lingering threads
-            Environment.Exit(-1);
-
-            return true;
-        }
-
-        #endregion Trap application termination
     }
 }

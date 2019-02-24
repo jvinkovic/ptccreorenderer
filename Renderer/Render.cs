@@ -1,11 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
-namespace PtcCreoRenderer
+namespace Renderer
 {
-    internal class Program
+    public class Render
     {
         private static string logName = "log";
         private static int logEntriesCount = 5;
@@ -16,11 +15,27 @@ namespace PtcCreoRenderer
         public static pfcls.CCpfcAsyncConnection Casync;
         public static pfcls.IpfcModel StartingDocument;
 
-        private static void Main(string[] args)
+        private static string _imagesFolder;
+
+        /// <summary>
+        /// args -> [images path, exe path, model path]
+        /// </summary>
+        /// <param name="args"></param>
+        public static void Main(string[] args)
         {
-            var p = new NonUiProgram();
-            p.Start("test.prt");        
-            return;
+            if (args != null && args.Length > 0)
+            {
+                _imagesFolder = args[0];
+            }
+
+            if (args.Length == 3)
+            {
+                string modelPath = args[2].Substring(0, args[2].LastIndexOf("prt") + 3);
+
+                var p = new FromModel();
+                p.Start(_imagesFolder, args[1], modelPath);
+                return;
+            }
 
             SetLogFile();
 
@@ -33,10 +48,13 @@ namespace PtcCreoRenderer
                 StartRender();
             }
 
-           File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " END \n");
+            File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " END \n");
 
-            Console.WriteLine("\nPress any key to exit!");
-            Console.ReadKey();
+            if (Console.IsOutputRedirected == false)
+            {
+                Console.WriteLine("\nPress any key to exit!");
+                Console.ReadKey();
+            }
         }
 
         private static void SetLogFile()
@@ -51,21 +69,13 @@ namespace PtcCreoRenderer
             f.Close();
         }
 
-        private static void testNonUi()
-        {
-            pfcls.IpfcModelDescriptor descModel;
-
-            Session.ChangeDirectory(Environment.CurrentDirectory);
-            descModel = (new pfcls.CCpfcModelDescriptor()).CreateFromFileName("test.prt");
-
-            StartingDocument = Session.RetrieveModel(descModel);
-        }
-
         private static bool ConnectToPtc()
         {
+            Console.Write("Starting connection...");
+
             try
             {
-               File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") +  " Connect to ptc start... \n");
+                File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Connect to ptc start... \n");
 
                 if (Casync == null)
                 {
@@ -74,20 +84,20 @@ namespace PtcCreoRenderer
 
                     if (AsyncConnection == null)
                     {
-                        string exePath = @"C:\PTC_stuff\Creo 4.0\M050\Parametric\bin\parametric.exe";
-                        AsyncConnection = Casync.Start(exePath /*+ " -g:no_graphics -i:rpc_input"*/, ".");                        
-                        //AsyncConnection = Casync.Connect(null,null,null,null);
-                       File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got connection \n");
+                        AsyncConnection = Casync.Connect(null, null, null, null);
+                        File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got connection \n");
                     }
+                    Console.Write(" Connected!");
+
                     Session = (pfcls.IpfcBaseSession)AsyncConnection.Session;
-                    testNonUi();
+                    Console.WriteLine(", Got session!");
                     File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got session \n");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-               File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + ex + " \n");
-                Console.WriteLine("\nMake sure model is opened with Administrator rights. \n" + ex + "\n");                
+                File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + ex + " \n");
+                Console.WriteLine("\nMake sure model is opened with Administrator rights. \n" + ex + "\n");
                 return false;
             }
 
@@ -101,28 +111,35 @@ namespace PtcCreoRenderer
 
         public static void StartRender()
         {
+            Console.WriteLine("Starting rendering...");
+
             try
             {
-               StartingDocument = GetActiveDocument();
-               File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got document \n");
+                StartingDocument = GetActiveDocument();
+                File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got document \n");
                 if (StartingDocument != null)
                 {
                     // do the rendering
                     pfcls.IpfcSolid solid = (pfcls.IpfcSolid)StartingDocument;
                     pfcls.IpfcFamilyMember familyMember = (pfcls.IpfcFamilyMember)solid;
-                    string activeDocumentPath = StartingDocument.Origin;               
 
-                    string cleanDocName = string.Concat(StartingDocument.FullName?.Split(Path.GetInvalidFileNameChars()));                    
-                    var dir = Directory.GetCurrentDirectory();
-                    try
+                    string cleanDocName = string.Concat(StartingDocument.FullName?.Split(Path.GetInvalidFileNameChars()));
+                    var dir = _imagesFolder;
+                    if (dir == null)
                     {
-                        dir = Path.GetDirectoryName(activeDocumentPath);
+                        try
+                        {
+                            dir = Path.GetDirectoryName(StartingDocument.Origin);
+                        }
+                        catch
+                        {
+                            dir = "";
+                        }
                     }
-                    catch { }
 
                     string activeDocumentFolder = Path.Combine(dir, cleanDocName + "_renders");
 
-                    Console.WriteLine("Images will be in " + activeDocumentFolder);
+                    Console.WriteLine("Images will be in \"" + activeDocumentFolder + "\"");
 
                     if (Directory.Exists(activeDocumentFolder) == false)
                     {
@@ -136,10 +153,12 @@ namespace PtcCreoRenderer
                     instructions.DotsPerInch = pfcls.EpfcDotsPerInch.EpfcRASTERDPI_300;
                     instructions.ImageDepth = pfcls.EpfcRasterDepth.EpfcRASTERDEPTH_24;
 
+                    Console.WriteLine("Getting instances...");
+                    File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Getting instances... \n");
                     pfcls.CpfcFamilyTableRows familyTableRows = familyMember.ListRows();
                     var total = familyTableRows.Count;
                     float count = 0;
-                   File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " start render all \n");
+                    File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " start render all \n");
                     foreach (pfcls.IpfcFamilyTableRow familyTableRow in familyTableRows)
                     {
                         string instanceName = familyTableRow.InstanceName;
@@ -156,11 +175,13 @@ namespace PtcCreoRenderer
                         count++;
                         Console.WriteLine(" \t - " + (count / total).ToString("0.00%") + " \t ({0}/{1})", count, total);
                     }
+
+                    Console.WriteLine("Done");
                 }
                 else
                 {
                     Console.WriteLine("\nCould not get active document.");
-                   File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Could not get active document \n");
+                    File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Could not get active document \n");
                 }
 
                 // return to view of starting document
@@ -168,12 +189,10 @@ namespace PtcCreoRenderer
                 {
                     StartingDocument.Display();
                 }
-
-                
             }
             catch (Exception ex)
             {
-               File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + ex + " \n");
+                File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + ex + " \n");
                 Console.WriteLine(ex.ToString());
             }
             finally
@@ -192,7 +211,7 @@ namespace PtcCreoRenderer
                 }
                 catch
                 {
-                   File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Connection end error. \n");
+                    File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " Connection end error. \n");
                     Console.WriteLine("\nConnection end error.");
                 }
             }
