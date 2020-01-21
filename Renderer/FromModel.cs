@@ -83,7 +83,7 @@ namespace Renderer
 
                     if (AsyncConnection == null)
                     {
-                        AsyncConnection = Casync.Start(_exe + " -g:no_graphics -i:rpc_input", ".");
+                        AsyncConnection = Casync.Start(_exe /*+ " -g:no_graphics -i:rpc_input"*/, ".");
                         File.AppendAllText(logName, DateTime.UtcNow.ToString("yy.MM.dd HH:mm:ss ") + " got connection \n");
                     }
                     Session = (pfcls.IpfcBaseSession)AsyncConnection.Session;
